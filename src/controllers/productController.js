@@ -3,8 +3,40 @@ import Product from '../models/productModel.js';
 
 //get all products
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.findAll();
-  res.status(200).json(products);
+
+  //pagination
+  const pageSize = 2
+  const page = Number(req.query.pageNumber) || 2
+
+
+  //number of products to skip
+  const offset = (page - 1) * pageSize;
+
+ 
+
+  try {
+     //get the total count of the products in db
+  const { count, rows: products }= await Product.findAndCountAll({
+    limit: pageSize,
+    offset: offset,
+  })
+
+  res.status(200).json({
+    totalItems: count,
+    currentPage: page,
+    pageSize: pageSize,
+    totalPages: Math.ceil(count / pageSize),
+    products: products,
+  })
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      message: error
+    })
+  }
+
+  
+  
 });
 
 //get products by id
