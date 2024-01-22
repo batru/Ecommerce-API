@@ -2,6 +2,8 @@ import asyncHandler from 'express-async-handler';
 import Order from '../models/orderModel.js';
 import OrderItem from '../models/orderItem.js';
 import ShippingAddress from '../models/shippingAddress.js';
+import Product from '../models/productModel.js'
+import sequelize from 'sequelize';
 
 const addAddress = asyncHandler (async (req,res) => {
   const order = await Order.findOne({
@@ -56,14 +58,36 @@ const addOrderItems = asyncHandler(async (req, res) => {
 
     const createdOrder = await order.save();
 
-    const orderdItems = orderItems.map((x) => {
-      return { ...x, userId: req.user.id, orderId: createdOrder.id };
-    });
+
+    // Get the ordered items from our database
+const itemsFromDB = await Product.findAll({
+  where: {
+    id: { [sequelize.Op.in]: orderItems.map((x) => x.productId) },
+  },
+});
+
+// Map over the order items and use the price from our items from the database
+const dbOrderItems = orderItems.map((itemFromClient) => {
+  const matchingItemFromDB = itemsFromDB.find(
+    (itemFromDB) => itemFromDB.id === itemFromClient.productId
+  );
+  return {
+    ...itemFromClient,
+   
+    price: matchingItemFromDB.price,
+    userId: req.user.id, 
+    orderId: createdOrder.id
+  };
+});
+
+    // const orderdItems = orderItems.map((x) => {
+    //   return { ...x, userId: req.user.id, orderId: createdOrder.id };
+    // });
 
     //create order items
     // const itemsOrderd = new OrderItem(orderdItems);
 
-    const itemsOrderd = await OrderItem.bulkCreate(orderdItems);
+    const itemsOrderd = await OrderItem.bulkCreate(dbOrderItems);
 
     res.status(201).json(itemsOrderd);
   }
