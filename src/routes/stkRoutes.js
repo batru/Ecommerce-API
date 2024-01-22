@@ -8,7 +8,7 @@ import {
 // import { protect, admin } from '../middleware/authMiddleWare.js';
 import { safaricomToken} from '../utils/safaricomToken.js'
 
-router.route('/stk').post(safaricomToken, stkPush);
+router.route('/stk/:orderId').post(safaricomToken, stkPush);
 
 router.route('/callback').post(stkCallback);
 export default router;

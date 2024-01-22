@@ -98,7 +98,7 @@ const dbOrderItems = orderItems.map((itemFromClient) => {
 // @access  Private
 const getMyOrders = asyncHandler(async (req, res) => {
   const orders = await Order.findAll({ userId: req.user.id });
-  const orderItems = await OrderItem.findAll({ userId: req.user.id });
+  const orderItems = await OrderItem.findAll({ where:{userId: req.user.id} });
   res.json({
     orders: orders,
     orderItems: orderItems,
@@ -115,7 +115,7 @@ const getOrderById = asyncHandler(async (req, res) => {
     },
   });
 
-  const orderItems = await OrderItem.findAll({ orderId: req.params.id });
+  const orderItems = await OrderItem.findAll({ where: { orderId: req.params.id }, });
 
   if (order) {
     res.json({

@@ -1,8 +1,29 @@
 import request from "request";
 
+import OrderItem from "../models/orderItem.js";
 
 const stkPush = (async (req,res) => {
-    const amount = req.body.amount;
+
+
+  //get total amount from orderitems and set = amount
+const orderItems = await OrderItem.findAll({where: {orderId:req.params.orderId}})
+
+const orderItemsWithTotalPrice = orderItems.map((item) => {
+  const totalPrice = item.price * item.qty;
+  return {
+ ...item,
+    totalPrice: totalPrice.toFixed(0), // round to 0 decimal places
+  };
+});
+
+// Calculate the total of totalPrice values
+const totalOrderValue = orderItemsWithTotalPrice.reduce((total, item) => {
+  return total + parseFloat(item.totalPrice);
+}, 0);
+
+console.log(totalOrderValue)
+
+    const amount = totalOrderValue;
     const phone = req.body.phone;
     const date = new Date();
     const Timestamp =
