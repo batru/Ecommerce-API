@@ -3,7 +3,8 @@ import User from '../models/userModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import generateToken from '../utils/generateToken.js';
-import welcomeEmail from '../utils/confirmEmail.js';
+import {confirmEmail, resetPasswordEmail} from '../utils/confirmEmail.js';
+
 //login user
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -68,7 +69,7 @@ const registerUser = asyncHandler(async (req, res) => {
       email: user.email,
       isAdmin: user.isAdmin,
     });
-    welcomeEmail(user.email)
+    confirmEmail(user.email)
   } else {
     res.status(400).json({ message: 'invalid user data' });
   }
@@ -89,30 +90,26 @@ const confirmUser = asyncHandler(async (req, res) => {
         where: {
           email: decoded.email,
         },
-      }).then((user)=> {
-        if (user) {
-
-          
-        user.update({
-            confirmed : Boolean(true)
-          })
-
-          
-
-          res.send('User Confirmed')
-       
-        }
-        else {
-          console.log('User not found');
-          return null;
-        }
-      }) .catch((error) => {
-        console.error('Error updating document:', error);
-      });
-
-
+      })
       
-  
+      if (user) {
+        const confirmedUser = await user.update({
+          confirmed: Boolean(true)
+        })
+
+        res.status(200).json({
+          message: 'User Confirmed',
+          confirmedUser
+        })
+
+      } else {
+        console.log('User not found')
+        res.status(404).json({
+          message: 'User not found'
+        })
+
+      }
+    
 
     } catch (error) {
       console.log(error);
@@ -125,6 +122,32 @@ const confirmUser = asyncHandler(async (req, res) => {
  
 
  
+});
+
+//forgot password
+const forgotPassword = asyncHandler(async (req, res) => {
+  //get body data
+  const { email} = req.body;
+
+  const userExists = await User.findOne({
+    where: {
+      email: email,
+    },
+  });
+  if (!userExists) {
+    return res.status(400).json({ message: 'No record' });
+  }
+ 
+  try {
+    resetPasswordEmail(email)
+    res.status(200).json({
+      message: 'Email sent...'
+    })
+  } catch (error) {
+    console.log(error)
+    res.send(error)
+  }
+  
 });
 
 
@@ -267,5 +290,6 @@ export {
   updateUserProfile,
   deleteUser,
   updateUser,
-  confirmUser
+  confirmUser,
+  forgotPassword
 };

@@ -12,7 +12,8 @@ import {
   updateUserProfile,
   deleteUser,
   updateUser,
-  confirmUser
+  confirmUser,
+  forgotPassword
 } from '../controllers/userController.js';
 
 router.route('/').post(registerUser).get(protect, admin, getUsers);
@@ -28,5 +29,6 @@ router
 router.post('/login', loginUser);
 router.post('/logout', logoutUser);
 router.get('/confirmation/:token', confirmUser)
+router.post('/forgotPassword', forgotPassword)
 
 export default router;
