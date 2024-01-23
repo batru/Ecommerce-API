@@ -12,6 +12,7 @@ import {
   updateUserProfile,
   deleteUser,
   updateUser,
+  confirmUser
 } from '../controllers/userController.js';
 
 router.route('/').post(registerUser).get(protect, admin, getUsers);
@@ -26,5 +27,6 @@ router
   .put(protect, updateUserProfile);
 router.post('/login', loginUser);
 router.post('/logout', logoutUser);
+router.get('/confirmation/:token', confirmUser)
 
 export default router;

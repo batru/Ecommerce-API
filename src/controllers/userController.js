@@ -1,8 +1,9 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/userModel.js';
 import bcrypt from 'bcryptjs';
-
+import jwt from 'jsonwebtoken';
 import generateToken from '../utils/generateToken.js';
+import welcomeEmail from '../utils/confirmEmail.js';
 //login user
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -67,10 +68,65 @@ const registerUser = asyncHandler(async (req, res) => {
       email: user.email,
       isAdmin: user.isAdmin,
     });
+    welcomeEmail(user.email)
   } else {
     res.status(400).json({ message: 'invalid user data' });
   }
 });
+
+//confirm user
+const confirmUser = asyncHandler(async (req, res) => {
+  const token = req.params.token;
+
+  if (token) {
+    //verify and decode token
+    try {
+      const decoded = jwt.verify(token, process.env.EMAIL_SECRET);
+      //set the user to req.user
+     
+      const user = await User.findOne({
+        attributes: { exclude: ['password'] },
+        where: {
+          email: decoded.email,
+        },
+      }).then((user)=> {
+        if (user) {
+
+          
+        user.update({
+            confirmed : Boolean(true)
+          })
+
+          
+
+          res.send('User Confirmed')
+       
+        }
+        else {
+          console.log('User not found');
+          return null;
+        }
+      }) .catch((error) => {
+        console.error('Error updating document:', error);
+      });
+
+
+      
+  
+
+    } catch (error) {
+      console.log(error);
+      res.status(401).json({ msg: 'not authorized, token failed' });
+    }
+  } else {
+    res.status(401).json({ msg: 'not authorized, no token' });
+  }
+
+ 
+
+ 
+});
+
 
 //get user profile
 const getUserProfile = asyncHandler(async (req, res) => {
@@ -211,4 +267,5 @@ export {
   updateUserProfile,
   deleteUser,
   updateUser,
+  confirmUser
 };

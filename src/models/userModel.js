@@ -16,6 +16,10 @@ const User = sequelize.define('user', {
     type: Sequelize.BOOLEAN,
     defaultValue: false,
   },
+  confirmed: {
+    type: Sequelize.BOOLEAN,
+    defaultValue: false,
+  },
   email: {
     type: Sequelize.STRING,
     allowNull: false,
