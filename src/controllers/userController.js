@@ -151,6 +151,65 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 
+//reset password
+const resetPassword = asyncHandler(async (req, res) => {
+  const password = req.body.password;
+  const token = req.params.token;
+
+  if (token) {
+    //verify and decode token
+    try {
+      const decoded = jwt.verify(token, process.env.EMAIL_SECRET);
+      //set the user to req.user
+     
+      const user = await User.findOne({
+      
+        where: {
+          email: decoded.email,
+        },
+      })
+      
+      if (user) {
+
+         //hash password
+  // generate a salt
+  const salt = await bcrypt.genSalt(10);
+  //hash password
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  //save the user details in db
+await user.update({
+ 
+    password: hashedPassword,
+  });
+
+        res.status(200).json({
+          message: 'Password reset'
+        })
+
+      } else {
+        console.log('User not found')
+        res.status(404).json({
+          message: 'User not found'
+        })
+
+      }
+    
+
+    } catch (error) {
+      console.log(error);
+      res.status(401).json({ msg: 'not authorized, token failed' });
+    }
+  } else {
+    res.status(401).json({ msg: 'not authorized, no token' });
+  }
+
+ 
+
+ 
+});
+
+
 //get user profile
 const getUserProfile = asyncHandler(async (req, res) => {
   const user = req.user; // here
@@ -291,5 +350,6 @@ export {
   deleteUser,
   updateUser,
   confirmUser,
-  forgotPassword
+  forgotPassword,
+  resetPassword
 };
